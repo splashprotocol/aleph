@@ -1,0 +1,23 @@
+name = "splash/splash-account"
+version = "0.0.0"
+compiler = "v1.1.15"
+plutus = "v3"
+license = "Apache-2.0"
+description = "Aiken contracts for project 'splash/splash-account'"
+
+[repository]
+user = "splash"
+project = "splash-account"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "v2.2.0"
+source = "github"
+
+[[dependencies]]
+name = "aiken-lang/merkle-patricia-forestry"
+version = "2.0.0"
+source = "github"
+
+[config]
