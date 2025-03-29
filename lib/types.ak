@@ -1,6 +1,5 @@
-use aiken/crypto.{Signature, VerificationKey, VerificationKeyHash}
+use aiken/crypto.{ScriptHash, Signature, VerificationKey, VerificationKeyHash}
 use aiken/merkle_patricia_forestry.{Proof}
-use cardano/address.{Address}
 use cardano/assets.{AssetName, PolicyId}
 
 pub type Nonce =
@@ -12,14 +11,17 @@ pub type Magic =
 pub type AccountState {
   /// Must be preserved
   magic: Magic,
+  allowlist: Data<List<ScriptHash>>,
   nonce: Int,
-  owner: VerificationKey,
+  owner: Data<VerificationKey>,
   store: Data<ByteArray>,
 }
 
 pub type AccountAction {
-  EvalIntention
-  Withdraw { to: Address }
+  /// Delegate control to third-party intent witness
+  Delegate(Data<ScriptHash>)
+  /// Direct operation carried by owner 
+  Direct
 }
 
 pub type Intention {

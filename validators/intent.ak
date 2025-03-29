@@ -1,6 +1,5 @@
 use aiken/builtin
 use aiken/cbor
-use aiken/collection/list.{length}
 use aiken/crypto.{VerificationKeyHash, blake2b_256, verify_ecdsa_signature}
 use aiken/merkle_patricia_forestry as mpf
 use aiken/primitive/bytearray.{concat}
@@ -176,7 +175,11 @@ fn validate_transition(
             |> concat(builtin.un_b_data(postfix))
             |> blake2b_256
         let signature_ok =
-          verify_ecdsa_signature(owner, message, builtin.un_b_data(signature))
+          verify_ecdsa_signature(
+            builtin.un_b_data(owner),
+            message,
+            builtin.un_b_data(signature),
+          )
         let continuation_ok =
           if has_remainder {
             let intent_key = cbor.serialise(intent_nonce)
