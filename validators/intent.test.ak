@@ -13,6 +13,8 @@ use types.{AccountState, AuthorizedIntention, Delegate, Intention, Sig}
 const null_hash =
   #"0000000000000000000000000000000000000000000000000000000000000000"
 
+const swap_intent_proxy_hash = "intent"
+
 test successful_exec_intent_atomic() {
   let operator = "operator"
   let owner =
@@ -21,7 +23,7 @@ test successful_exec_intent_atomic() {
   let account_state_0 =
     AccountState {
       magic: account_magic,
-      allowlist: [account.swap_intent_proxy_hash],
+      allowlist: [swap_intent_proxy_hash],
       nonce: 0,
       owner,
       store: null_hash,
@@ -42,7 +44,7 @@ test successful_exec_intent_atomic() {
   let account_state_1 =
     AccountState {
       magic: account_magic,
-      allowlist: [account.swap_intent_proxy_hash],
+      allowlist: [swap_intent_proxy_hash],
       nonce: 1,
       owner,
       store: null_hash,
@@ -63,13 +65,13 @@ test successful_exec_intent_atomic() {
       inputs: inputs,
       outputs: outputs,
       extra_signatories: [operator],
-      withdrawals: [Pair(Script(account.swap_intent_proxy_hash), 0)],
+      withdrawals: [Pair(Script(swap_intent_proxy_hash), 0)],
     }
 
   let account_sc =
     ScriptContext(
       tx,
-      Delegate(account.swap_intent_proxy_hash),
+      Delegate(swap_intent_proxy_hash),
       Spending(account_in_ref, Some(intent.dataify(account_state_0))),
     )
 
@@ -100,7 +102,7 @@ test successful_exec_intent_atomic() {
     ScriptContext(
       tx,
       batch_redeemer,
-      Withdrawing(Script(account.swap_intent_proxy_hash)),
+      Withdrawing(Script(swap_intent_proxy_hash)),
     )
 
   and {
@@ -131,7 +133,7 @@ test successful_exec_intent_continous() {
   let account_state_0 =
     AccountState {
       magic: account_magic,
-      allowlist: [account.swap_intent_proxy_hash],
+      allowlist: [swap_intent_proxy_hash],
       nonce: 0,
       owner,
       store: null_hash,
@@ -152,7 +154,7 @@ test successful_exec_intent_continous() {
   let account_state_1 =
     AccountState {
       magic: account_magic,
-      allowlist: [account.swap_intent_proxy_hash],
+      allowlist: [swap_intent_proxy_hash],
       nonce: 1,
       owner,
       store: #"4b7f9095ddcc26e13a3bae5af26991fadbe1c9a9ee10fcf0849ec15709cac845",
@@ -173,13 +175,13 @@ test successful_exec_intent_continous() {
       inputs: inputs,
       outputs: outputs,
       extra_signatories: [operator],
-      withdrawals: [Pair(Script(account.swap_intent_proxy_hash), 0)],
+      withdrawals: [Pair(Script(swap_intent_proxy_hash), 0)],
     }
 
   let account_sc =
     ScriptContext(
       tx,
-      Delegate(account.swap_intent_proxy_hash),
+      Delegate(swap_intent_proxy_hash),
       Spending(account_in_ref, Some(intent.dataify(account_state_0))),
     )
 
@@ -210,7 +212,7 @@ test successful_exec_intent_continous() {
     ScriptContext(
       tx,
       batch_redeemer,
-      Withdrawing(Script(account.swap_intent_proxy_hash)),
+      Withdrawing(Script(swap_intent_proxy_hash)),
     )
 
   and {
@@ -228,7 +230,7 @@ test bench_exec_intent_atomic() {
   let account_state_0 =
     AccountState {
       magic: account_magic,
-      allowlist: [account.swap_intent_proxy_hash],
+      allowlist: [swap_intent_proxy_hash],
       nonce: 0,
       owner,
       store: null_hash,
@@ -255,7 +257,7 @@ test bench_exec_intent_atomic() {
   let account_state_1 =
     AccountState {
       magic: account_magic,
-      allowlist: [account.swap_intent_proxy_hash],
+      allowlist: [swap_intent_proxy_hash],
       nonce: 1,
       owner,
       store: null_hash,
@@ -275,7 +277,7 @@ test bench_exec_intent_atomic() {
       inputs: inputs,
       outputs: outputs,
       extra_signatories: [operator],
-      withdrawals: [Pair(Script(account.swap_intent_proxy_hash), 0)],
+      withdrawals: [Pair(Script(swap_intent_proxy_hash), 0)],
     }
 
   let intent_1 =
@@ -306,7 +308,7 @@ test bench_exec_intent_atomic() {
     ScriptContext(
       tx,
       batch_redeemer,
-      Withdrawing(Script(account.swap_intent_proxy_hash)),
+      Withdrawing(Script(swap_intent_proxy_hash)),
     )
 
   and {
@@ -317,7 +319,7 @@ test bench_exec_intent_atomic() {
         acc && account.account.else(
           ScriptContext(
             tx,
-            Delegate(account.swap_intent_proxy_hash),
+            Delegate(swap_intent_proxy_hash),
             Spending(i.output_reference, Some(intent.dataify(account_state_0))),
           ),
         )
@@ -336,7 +338,7 @@ test bench_exec_intent_continous() {
   let account_state_0 =
     AccountState {
       magic: account_magic,
-      allowlist: [account.swap_intent_proxy_hash],
+      allowlist: [swap_intent_proxy_hash],
       nonce: 0,
       owner,
       store: null_hash,
@@ -363,7 +365,7 @@ test bench_exec_intent_continous() {
   let account_state_1 =
     AccountState {
       magic: account_magic,
-      allowlist: [account.swap_intent_proxy_hash],
+      allowlist: [swap_intent_proxy_hash],
       nonce: 1,
       owner,
       store: #"4b7f9095ddcc26e13a3bae5af26991fadbe1c9a9ee10fcf0849ec15709cac845",
@@ -383,7 +385,7 @@ test bench_exec_intent_continous() {
       inputs: inputs,
       outputs: outputs,
       extra_signatories: [operator],
-      withdrawals: [Pair(Script(account.swap_intent_proxy_hash), 0)],
+      withdrawals: [Pair(Script(swap_intent_proxy_hash), 0)],
     }
 
   let intent_1 =
@@ -414,7 +416,7 @@ test bench_exec_intent_continous() {
     ScriptContext(
       tx,
       batch_redeemer,
-      Withdrawing(Script(account.swap_intent_proxy_hash)),
+      Withdrawing(Script(swap_intent_proxy_hash)),
     )
 
   and {
@@ -425,7 +427,7 @@ test bench_exec_intent_continous() {
         acc && account.account.else(
           ScriptContext(
             tx,
-            Delegate(account.swap_intent_proxy_hash),
+            Delegate(swap_intent_proxy_hash),
             Spending(i.output_reference, Some(intent.dataify(account_state_0))),
           ),
         )

@@ -5,8 +5,6 @@ use cardano/script_context.{ScriptContext, Spending}
 use cardano/transaction.{Transaction}
 use types.{AccountAction, Delegate, Direct}
 
-pub const swap_intent_proxy_hash = "intent"
-
 validator account {
   else(sc: ScriptContext) {
     let ScriptContext { transaction: tx, info, redeemer } = sc
