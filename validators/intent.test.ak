@@ -15,7 +15,19 @@ const null_hash =
 
 const swap_intent_proxy_hash = "intent"
 
-test successful_exec_intent_atomic() {
+test exec_intent_atomic_success() {
+  exec_intent_atomic(10, 500, 500)
+}
+
+test exec_intent_atomic_bad_rate() {
+  !exec_intent_atomic(10, 500, 499)
+}
+
+test exec_intent_atomic_bad_fee() {
+  !exec_intent_atomic(11, 500, 500)
+}
+
+fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int) {
   let operator = "operator"
   let owner =
     #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
@@ -30,13 +42,14 @@ test successful_exec_intent_atomic() {
       store: null_hash,
     }
   let account_in_ref = OutputReference("tx0", 0)
+  let lovelace_initial = 1000
   let inputs =
     [
       Input(
         account_in_ref,
         Output(
           account_address,
-          from_lovelace(1000) |> add("foo", "bar", 1),
+          from_lovelace(lovelace_initial) |> add("foo", "bar", 1),
           InlineDatum(account_state_0),
           None,
         ),
@@ -55,7 +68,9 @@ test successful_exec_intent_atomic() {
     [
       Output(
         account_address,
-        from_lovelace(490) |> add("foo", "bar", 1) |> add("tok", "tn", 500),
+        from_lovelace(lovelace_initial - consumed_fee - consumed_input)
+          |> add("foo", "bar", 1)
+          |> add("tok", "tn", 0 + added_output),
         InlineDatum(account_state_1),
         None,
       ),
@@ -113,7 +128,7 @@ test successful_exec_intent_atomic() {
   }
 }
 
-test successful_exec_intent_atomic_co_sign() {
+test exec_intent_atomic_co_sign_success() {
   let operator = "operator"
   let owner =
     #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
@@ -212,7 +227,7 @@ test successful_exec_intent_atomic_co_sign() {
   }
 }
 
-test successful_exec_intent_continous() {
+test exec_intent_continous_success() {
   let operator = "operator"
   let owner =
     #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
