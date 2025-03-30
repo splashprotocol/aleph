@@ -113,6 +113,105 @@ test successful_exec_intent_atomic() {
   }
 }
 
+test successful_exec_intent_atomic_co_sign() {
+  let operator = "operator"
+  let owner =
+    #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
+  let co_owner = owner
+  let account_address = Address(Script("account_address"), None)
+  let account_state_0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: 0,
+      hot_cred: (dataify(owner), dataify(co_owner)),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let account_in_ref = OutputReference("tx0", 0)
+  let inputs =
+    [
+      Input(
+        account_in_ref,
+        Output(
+          account_address,
+          from_lovelace(1000) |> add("foo", "bar", 1),
+          InlineDatum(account_state_0),
+          None,
+        ),
+      ),
+    ]
+  let account_state_1 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: 1,
+      hot_cred: (dataify(owner), dataify(co_owner)),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let outputs =
+    [
+      Output(
+        account_address,
+        from_lovelace(490) |> add("foo", "bar", 1) |> add("tok", "tn", 500),
+        InlineDatum(account_state_1),
+        None,
+      ),
+    ]
+
+  let tx =
+    Transaction {
+      ..placeholder,
+      inputs: inputs,
+      outputs: outputs,
+      extra_signatories: [operator],
+      withdrawals: [Pair(Script(swap_intent_proxy_hash), 0)],
+    }
+
+  let account_sc =
+    ScriptContext(
+      tx,
+      Delegate(swap_intent_proxy_hash),
+      Spending(account_in_ref, Some(intent.dataify(account_state_0))),
+    )
+
+  let intent_1 =
+    Intention {
+      target_nonce: 0,
+      leaving_asset: (ada_policy_id, ada_asset_name),
+      leaving_amount: 500,
+      arriving_asset: ("tok", "tn"),
+      expected_arriving_amount: 500,
+      fee_lovelace: 10,
+      operator,
+    }
+  let auth_intent_1 =
+    AuthorizedIntention {
+      intent: intent_1,
+      remainder: 0,
+      auth: Sig {
+        prefix: "",
+        postfix: "",
+        signature: #"59df81675843a4fa8299eb7580f163e604b8765e37a9c921dee5f01301ea654f0d3a1587ae1d87bc48685aeb4c7bfe2baf2c3d73b53d430a332ec4f2a0961890",
+        update_proof: [],
+      },
+    }
+  let batch_redeemer = BatchRedeemer { intentions: [auth_intent_1] }
+
+  let intent_sc =
+    ScriptContext(
+      tx,
+      batch_redeemer,
+      Withdrawing(Script(swap_intent_proxy_hash)),
+    )
+
+  and {
+    account.account.else(account_sc),
+    intent.batch_intention.else(intent_sc),
+  }
+}
+
 test successful_exec_intent_continous() {
   let operator = "operator"
   let owner =
