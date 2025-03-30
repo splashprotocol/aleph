@@ -170,7 +170,7 @@ fn validate_transition(
         }
       }
       Sig { prefix, postfix, signature, update_proof } -> {
-        expect current_nonce == intent_nonce
+        let nonce_ok = current_nonce == intent_nonce
         let message =
           intent_bytes
             |> concat(builtin.un_b_data(prefix), _)
@@ -213,7 +213,7 @@ fn validate_transition(
           } else {
             True
           }
-        main_signature_ok? && co_signature_ok? && continuation_ok?
+        nonce_ok? && main_signature_ok? && co_signature_ok? && continuation_ok?
       }
     }
 
@@ -258,8 +258,7 @@ fn fold_ios(
         [output, ..outputs] ->
           when input.output.datum is {
             InlineDatum(datum) -> {
-              let fields = builtin.un_constr_data(datum) |> builtin.snd_pair
-              let magic = builtin.head_list(fields)
+              let magic = datum |> builtin.unconstr_fields |> builtin.head_list
               if dataify(constants.account_magic) == magic {
                 when intents is {
                   [] -> False
