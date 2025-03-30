@@ -9,11 +9,17 @@ pub type Magic =
   ByteArray
 
 pub type AccountState {
-  /// Must be preserved
-  magic: Magic,
+  /// Used to recognise accounts
+  magic: Data<Magic>,
+  /// Set of allowed delegatees
   allowlist: Data<List<ScriptHash>>,
-  nonce: Int,
-  owner: Data<VerificationKey>,
+  /// Monotonically increasing counter used to protect account from replay attacks 
+  nonce: Data<Int>,
+  /// Credentials used to authorize intents. main cred and an optional co-cred
+  hot_cred: (Data<VerificationKey>, Data<VerificationKey>),
+  /// Credential for direct spening
+  cold_cred: Data<VerificationKeyHash>,
+  /// Local store of the account used by dapps to save intermediate state
   store: Data<ByteArray>,
 }
 
@@ -25,7 +31,7 @@ pub type AccountAction {
 }
 
 pub type Intention {
-  nonce: Nonce,
+  target_nonce: Nonce,
   leaving_asset: (PolicyId, AssetName),
   leaving_amount: Int,
   arriving_asset: (PolicyId, AssetName),

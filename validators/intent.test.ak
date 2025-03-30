@@ -4,10 +4,10 @@ use cardano/address.{Address, Script}
 use cardano/assets.{ada_asset_name, ada_policy_id, add, from_lovelace}
 use cardano/script_context.{ScriptContext, Spending, Withdrawing}
 use cardano/transaction.{
-  InlineDatum, Input, Output, OutputReference, Transaction,
+  InlineDatum, Input, Output, OutputReference, Transaction, placeholder,
 }
 use constants.{account_magic}
-use intent.{BatchRedeemer}
+use intent.{BatchRedeemer, dataify}
 use types.{AccountState, AuthorizedIntention, Delegate, Intention, Sig}
 
 const null_hash =
@@ -25,7 +25,8 @@ test successful_exec_intent_atomic() {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
       nonce: 0,
-      owner,
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
       store: null_hash,
     }
   let account_in_ref = OutputReference("tx0", 0)
@@ -46,7 +47,8 @@ test successful_exec_intent_atomic() {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
       nonce: 1,
-      owner,
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
       store: null_hash,
     }
   let outputs =
@@ -61,7 +63,7 @@ test successful_exec_intent_atomic() {
 
   let tx =
     Transaction {
-      ..transaction.placeholder,
+      ..placeholder,
       inputs: inputs,
       outputs: outputs,
       extra_signatories: [operator],
@@ -77,7 +79,7 @@ test successful_exec_intent_atomic() {
 
   let intent_1 =
     Intention {
-      nonce: 0,
+      target_nonce: 0,
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),
@@ -111,20 +113,6 @@ test successful_exec_intent_atomic() {
   }
 }
 
-// fn sig() {
-//     use secp256k1::{Secp256k1, Message, SecretKey, PublicKey};
-
-//     let secp = Secp256k1::new();
-//     let secret_key = SecretKey::from_slice(&[0xcd; 32]).expect("32 bytes, within curve order");
-//     let public_key = PublicKey::from_secret_key(&secp, &secret_key);
-//     println!("public key: {}", hex::encode(public_key.serialize()));
-//     let message = Message::from_digest(<[u8;32]>::try_from(hex::decode("F4C6DA9CB58869F410C330E60F501E560E7AD3632288C8B181F503ED1AB35C65").unwrap()).unwrap());
-
-//     let sig = secp.sign_ecdsa(&message, &secret_key);
-//     println!("sig: {}", hex::encode(sig.serialize_compact()));
-//     assert!(secp.verify_ecdsa(&message, &sig, &public_key).is_ok());
-// }
-
 test successful_exec_intent_continous() {
   let operator = "operator"
   let owner =
@@ -135,7 +123,8 @@ test successful_exec_intent_continous() {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
       nonce: 0,
-      owner,
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
       store: null_hash,
     }
   let account_in_ref = OutputReference("tx0", 0)
@@ -156,7 +145,8 @@ test successful_exec_intent_continous() {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
       nonce: 1,
-      owner,
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
       store: #"4b7f9095ddcc26e13a3bae5af26991fadbe1c9a9ee10fcf0849ec15709cac845",
     }
   let outputs =
@@ -171,7 +161,7 @@ test successful_exec_intent_continous() {
 
   let tx =
     Transaction {
-      ..transaction.placeholder,
+      ..placeholder,
       inputs: inputs,
       outputs: outputs,
       extra_signatories: [operator],
@@ -187,7 +177,7 @@ test successful_exec_intent_continous() {
 
   let intent_1 =
     Intention {
-      nonce: 0,
+      target_nonce: 0,
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),
@@ -232,7 +222,8 @@ test bench_exec_intent_atomic() {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
       nonce: 0,
-      owner,
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
       store: null_hash,
     }
   let inputs =
@@ -259,7 +250,8 @@ test bench_exec_intent_atomic() {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
       nonce: 1,
-      owner,
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
       store: null_hash,
     }
   let output =
@@ -273,7 +265,7 @@ test bench_exec_intent_atomic() {
 
   let tx =
     Transaction {
-      ..transaction.placeholder,
+      ..placeholder,
       inputs: inputs,
       outputs: outputs,
       extra_signatories: [operator],
@@ -282,7 +274,7 @@ test bench_exec_intent_atomic() {
 
   let intent_1 =
     Intention {
-      nonce: 0,
+      target_nonce: 0,
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),
@@ -340,7 +332,8 @@ test bench_exec_intent_continous() {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
       nonce: 0,
-      owner,
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
       store: null_hash,
     }
   let inputs =
@@ -367,7 +360,8 @@ test bench_exec_intent_continous() {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
       nonce: 1,
-      owner,
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
       store: #"4b7f9095ddcc26e13a3bae5af26991fadbe1c9a9ee10fcf0849ec15709cac845",
     }
   let output =
@@ -381,7 +375,7 @@ test bench_exec_intent_continous() {
 
   let tx =
     Transaction {
-      ..transaction.placeholder,
+      ..placeholder,
       inputs: inputs,
       outputs: outputs,
       extra_signatories: [operator],
@@ -390,7 +384,7 @@ test bench_exec_intent_continous() {
 
   let intent_1 =
     Intention {
-      nonce: 0,
+      target_nonce: 0,
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),

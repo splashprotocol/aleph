@@ -3,7 +3,7 @@ use aiken/collection/list
 use cardano/address.{Credential, Script}
 use cardano/script_context.{ScriptContext, Spending}
 use cardano/transaction.{Transaction}
-use types.{AccountAction, Delegate, Direct}
+use types.{AccountAction, AccountState, Delegate, Direct}
 
 validator account {
   else(sc: ScriptContext) {
@@ -15,8 +15,7 @@ validator account {
           Delegate(delegate) -> {
             let allowlist =
               datum
-                |> builtin.un_constr_data
-                |> builtin.snd_pair
+                |> builtin.unconstr_fields
                 |> builtin.tail_list
                 |> builtin.head_list
                 |> builtin.un_list_data
@@ -28,7 +27,10 @@ validator account {
               ),
             }
           }
-          Direct -> False
+          Direct -> {
+            expect state: AccountState = datum
+            list.has(tx.extra_signatories, builtin.un_b_data(state.cold_cred))
+          }
         }
       }
       _ -> fail

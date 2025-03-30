@@ -44,7 +44,7 @@ fn validate_transition(
   account_state: Data<AccountState>,
   operator: VerificationKeyHash,
 ) -> Bool {
-  expect AccountState { nonce, owner, store, .. } as curr_account_state =
+  expect AccountState { nonce, hot_cred, store, .. } as curr_account_state =
     account_state
   expect AuthorizedIntention { intent, remainder: leaving_remainder, auth } =
     intent
@@ -132,10 +132,12 @@ fn validate_transition(
       removed_lovelace <= fee_consumed
     }
 
-  let intent_nonce = intent.nonce
+  let intent_nonce = intent.target_nonce
   let intent_bytes = intent |> cbor.serialise
 
   let has_remainder = leaving_remainder > 0
+
+  let current_nonce = builtin.un_i_data(nonce)
 
   let auth_ok =
     when auth is {
@@ -168,18 +170,29 @@ fn validate_transition(
         }
       }
       Sig { prefix, postfix, signature, update_proof } -> {
-        expect nonce == intent_nonce
+        expect current_nonce == intent_nonce
         let message =
           intent_bytes
             |> concat(builtin.un_b_data(prefix), _)
             |> concat(builtin.un_b_data(postfix))
             |> blake2b_256
-        let signature_ok =
+        let main_signature_ok =
           verify_ecdsa_signature(
-            builtin.un_b_data(owner),
+            hot_cred.1st |> builtin.un_b_data,
             message,
             builtin.un_b_data(signature),
           )
+        let co_cred = hot_cred.2nd
+        let co_signature_ok =
+          if co_cred != dataify([]) {
+            verify_ecdsa_signature(
+              co_cred |> builtin.un_b_data,
+              message,
+              builtin.un_b_data(signature),
+            )
+          } else {
+            True
+          }
         let continuation_ok =
           if has_remainder {
             let intent_key = cbor.serialise(intent_nonce)
@@ -200,14 +213,14 @@ fn validate_transition(
           } else {
             True
           }
-        signature_ok? && continuation_ok?
+        main_signature_ok? && co_signature_ok? && continuation_ok?
       }
     }
 
   let expected_next_account_state =
     AccountState {
       ..curr_account_state,
-      nonce: nonce + 1,
+      nonce: current_nonce + 1,
       store: next_account_state.store,
     }
 
