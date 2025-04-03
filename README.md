@@ -16,6 +16,11 @@ aiken check
 
 ## Signign intents off-chain
 
+```toml
+[dependencies]
+secp256k1 = { version = "0.30.0", features = ["rand", "hashes", "std"] }
+```
+
 ```rust
 use secp256k1::{Secp256k1, Message, SecretKey, PublicKey};
 

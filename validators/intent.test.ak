@@ -7,7 +7,8 @@ use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction, placeholder,
 }
 use constants.{account_magic}
-use intent.{BatchRedeemer, dataify}
+use data.{dataify}
+use intent.{BatchRedeemer}
 use types.{AccountState, AuthorizedIntention, Delegate, Intention, Sig}
 
 const null_hash =
@@ -36,7 +37,7 @@ fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int)
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 0,
+      nonce: [0, 0, 0, 0, 0],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
       store: null_hash,
@@ -59,7 +60,7 @@ fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int)
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 1,
+      nonce: [0, 0, 0, 0, 2],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
       store: null_hash,
@@ -89,12 +90,12 @@ fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int)
     ScriptContext(
       tx,
       Delegate(swap_intent_proxy_hash),
-      Spending(account_in_ref, Some(intent.dataify(account_state_0))),
+      Spending(account_in_ref, Some(dataify(account_state_0))),
     )
 
   let intent_1 =
     Intention {
-      target_nonce: 0,
+      target_nonce: (4, 2),
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),
@@ -109,7 +110,7 @@ fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int)
       auth: Sig {
         prefix: "",
         postfix: "",
-        signature: #"59df81675843a4fa8299eb7580f163e604b8765e37a9c921dee5f01301ea654f0d3a1587ae1d87bc48685aeb4c7bfe2baf2c3d73b53d430a332ec4f2a0961890",
+        signature: #"6c07080dd51ddca5f5ac4a28ce412b34ffa44dc57b27141b184efd698e452a504d987c3850c43a4b3aecc8166be4cc5758ed3649679e403f4a8d1720ee0293c4",
         update_proof: [],
       },
     }
@@ -138,7 +139,7 @@ test exec_intent_atomic_co_sign_success() {
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 0,
+      nonce: [0, 0, 0, 0, 0],
       hot_cred: (dataify(owner), dataify(co_owner)),
       cold_cred: "cold_owner",
       store: null_hash,
@@ -160,7 +161,7 @@ test exec_intent_atomic_co_sign_success() {
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 1,
+      nonce: [0, 0, 0, 0, 2],
       hot_cred: (dataify(owner), dataify(co_owner)),
       cold_cred: "cold_owner",
       store: null_hash,
@@ -188,12 +189,12 @@ test exec_intent_atomic_co_sign_success() {
     ScriptContext(
       tx,
       Delegate(swap_intent_proxy_hash),
-      Spending(account_in_ref, Some(intent.dataify(account_state_0))),
+      Spending(account_in_ref, Some(dataify(account_state_0))),
     )
 
   let intent_1 =
     Intention {
-      target_nonce: 0,
+      target_nonce: (4, 2),
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),
@@ -208,7 +209,7 @@ test exec_intent_atomic_co_sign_success() {
       auth: Sig {
         prefix: "",
         postfix: "",
-        signature: #"59df81675843a4fa8299eb7580f163e604b8765e37a9c921dee5f01301ea654f0d3a1587ae1d87bc48685aeb4c7bfe2baf2c3d73b53d430a332ec4f2a0961890",
+        signature: #"6c07080dd51ddca5f5ac4a28ce412b34ffa44dc57b27141b184efd698e452a504d987c3850c43a4b3aecc8166be4cc5758ed3649679e403f4a8d1720ee0293c4",
         update_proof: [],
       },
     }
@@ -236,7 +237,7 @@ test exec_intent_continous_success() {
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 0,
+      nonce: [0, 0, 0, 0, 0],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
       store: null_hash,
@@ -258,10 +259,10 @@ test exec_intent_continous_success() {
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 1,
+      nonce: [0, 0, 0, 0, 2],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
-      store: #"4b7f9095ddcc26e13a3bae5af26991fadbe1c9a9ee10fcf0849ec15709cac845",
+      store: #"ca1dceb60bc4e65660265e2929fd0e8801bd994fd35dd01442bfe157da76057a",
     }
   let outputs =
     [
@@ -286,12 +287,12 @@ test exec_intent_continous_success() {
     ScriptContext(
       tx,
       Delegate(swap_intent_proxy_hash),
-      Spending(account_in_ref, Some(intent.dataify(account_state_0))),
+      Spending(account_in_ref, Some(dataify(account_state_0))),
     )
 
   let intent_1 =
     Intention {
-      target_nonce: 0,
+      target_nonce: (4, 2),
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),
@@ -306,7 +307,7 @@ test exec_intent_continous_success() {
       auth: Sig {
         prefix: "",
         postfix: "",
-        signature: #"59df81675843a4fa8299eb7580f163e604b8765e37a9c921dee5f01301ea654f0d3a1587ae1d87bc48685aeb4c7bfe2baf2c3d73b53d430a332ec4f2a0961890",
+        signature: #"6c07080dd51ddca5f5ac4a28ce412b34ffa44dc57b27141b184efd698e452a504d987c3850c43a4b3aecc8166be4cc5758ed3649679e403f4a8d1720ee0293c4",
         update_proof: [],
       },
     }
@@ -335,7 +336,7 @@ test bench_exec_intent_atomic() {
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 0,
+      nonce: [0, 0, 0, 0, 0],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
       store: null_hash,
@@ -363,7 +364,7 @@ test bench_exec_intent_atomic() {
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 1,
+      nonce: [0, 0, 0, 0, 2],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
       store: null_hash,
@@ -388,7 +389,7 @@ test bench_exec_intent_atomic() {
 
   let intent_1 =
     Intention {
-      target_nonce: 0,
+      target_nonce: (4, 2),
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),
@@ -403,7 +404,7 @@ test bench_exec_intent_atomic() {
       auth: Sig {
         prefix: "",
         postfix: "",
-        signature: #"59df81675843a4fa8299eb7580f163e604b8765e37a9c921dee5f01301ea654f0d3a1587ae1d87bc48685aeb4c7bfe2baf2c3d73b53d430a332ec4f2a0961890",
+        signature: #"6c07080dd51ddca5f5ac4a28ce412b34ffa44dc57b27141b184efd698e452a504d987c3850c43a4b3aecc8166be4cc5758ed3649679e403f4a8d1720ee0293c4",
         update_proof: [],
       },
     }
@@ -426,7 +427,7 @@ test bench_exec_intent_atomic() {
           ScriptContext(
             tx,
             Delegate(swap_intent_proxy_hash),
-            Spending(i.output_reference, Some(intent.dataify(account_state_0))),
+            Spending(i.output_reference, Some(dataify(account_state_0))),
           ),
         )
       },
@@ -445,7 +446,7 @@ test bench_exec_intent_continous() {
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 0,
+      nonce: [0, 0, 0, 0, 0],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
       store: null_hash,
@@ -460,7 +461,10 @@ test bench_exec_intent_continous() {
             OutputReference("tx0", i),
             Output(
               account_address,
-              from_lovelace(1000) |> add("foo", "bar", 1),
+              from_lovelace(1000)
+                |> add("foo", "bar", 1)
+                |> add("foo", "baz", 9)
+                |> add("raz", "baz", 100),
               InlineDatum(account_state_0),
               None,
             ),
@@ -473,15 +477,19 @@ test bench_exec_intent_continous() {
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
-      nonce: 1,
+      nonce: [0, 0, 0, 0, 2],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
-      store: #"4b7f9095ddcc26e13a3bae5af26991fadbe1c9a9ee10fcf0849ec15709cac845",
+      store: #"ca1dceb60bc4e65660265e2929fd0e8801bd994fd35dd01442bfe157da76057a",
     }
   let output =
     Output(
       account_address,
-      from_lovelace(694) |> add("foo", "bar", 1) |> add("tok", "tn", 300),
+      from_lovelace(694)
+        |> add("foo", "bar", 1)
+        |> add("foo", "baz", 9)
+        |> add("raz", "baz", 100)
+        |> add("tok", "tn", 300),
       InlineDatum(account_state_1),
       None,
     )
@@ -498,7 +506,7 @@ test bench_exec_intent_continous() {
 
   let intent_1 =
     Intention {
-      target_nonce: 0,
+      target_nonce: (4, 2),
       leaving_asset: (ada_policy_id, ada_asset_name),
       leaving_amount: 500,
       arriving_asset: ("tok", "tn"),
@@ -513,7 +521,7 @@ test bench_exec_intent_continous() {
       auth: Sig {
         prefix: "",
         postfix: "",
-        signature: #"59df81675843a4fa8299eb7580f163e604b8765e37a9c921dee5f01301ea654f0d3a1587ae1d87bc48685aeb4c7bfe2baf2c3d73b53d430a332ec4f2a0961890",
+        signature: #"6c07080dd51ddca5f5ac4a28ce412b34ffa44dc57b27141b184efd698e452a504d987c3850c43a4b3aecc8166be4cc5758ed3649679e403f4a8d1720ee0293c4",
         update_proof: [],
       },
     }
@@ -536,7 +544,7 @@ test bench_exec_intent_continous() {
           ScriptContext(
             tx,
             Delegate(swap_intent_proxy_hash),
-            Spending(i.output_reference, Some(intent.dataify(account_state_0))),
+            Spending(i.output_reference, Some(dataify(account_state_0))),
           ),
         )
       },

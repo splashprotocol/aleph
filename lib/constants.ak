@@ -1,1 +1,3 @@
-pub const account_magic: ByteArray = #[1]
+use data
+
+pub const account_magic: Data = data.dataify(#[1])

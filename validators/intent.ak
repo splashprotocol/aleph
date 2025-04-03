@@ -8,6 +8,8 @@ use cardano/certificate.{RegisterCredential}
 use cardano/script_context.{Publishing, ScriptContext, Withdrawing}
 use cardano/transaction.{InlineDatum, Input, Output}
 use constants
+use data.{dataify}
+use nonce.{check_nonce}
 use types.{AccountState, AuthorizedIntention, Intention, Path, Sig}
 use value_ext as ext
 
@@ -137,8 +139,6 @@ fn validate_transition(
 
   let has_remainder = leaving_remainder > 0
 
-  let current_nonce = builtin.un_i_data(nonce)
-
   let auth_ok =
     when auth is {
       Path(proof) -> {
@@ -170,7 +170,13 @@ fn validate_transition(
         }
       }
       Sig { prefix, postfix, signature, update_proof } -> {
-        let nonce_ok = current_nonce == intent_nonce
+        let nonce_ok =
+          check_nonce(
+            builtin.un_list_data(nonce),
+            builtin.un_list_data(next_account_state.nonce),
+            intent_nonce.1st,
+            intent_nonce.2nd,
+          )
         let message =
           intent_bytes
             |> concat(builtin.un_b_data(prefix), _)
@@ -217,17 +223,17 @@ fn validate_transition(
       }
     }
 
-  let expected_next_account_state =
-    AccountState {
-      ..curr_account_state,
-      nonce: current_nonce + 1,
-      store: next_account_state.store,
+  let next_state_ok = and {
+      next_account_state.magic == constants.account_magic,
+      curr_account_state.allowlist == next_account_state.allowlist,
+      curr_account_state.hot_cred == next_account_state.hot_cred,
+      curr_account_state.cold_cred == next_account_state.cold_cred,
     }
 
   and {
     (remaining_input_value == remaining_output_value)?,
-    (next_account_state == expected_next_account_state)?,
     (operator == authorised_operator)?,
+    next_state_ok?,
     declared_remainder_ok?,
     exchange_ok?,
     fee_ok?,
@@ -259,7 +265,7 @@ fn fold_ios(
           when input.output.datum is {
             InlineDatum(datum) -> {
               let magic = datum |> builtin.unconstr_fields |> builtin.head_list
-              if dataify(constants.account_magic) == magic {
+              if constants.account_magic == magic {
                 when intents is {
                   [] -> False
                   [intent, ..intents] ->
@@ -293,8 +299,4 @@ fn fold_ios(
           }
       }
   }
-}
-
-pub fn dataify(d: Data) -> Data {
-  d
 }

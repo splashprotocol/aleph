@@ -6,7 +6,7 @@ use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction, placeholder,
 }
 use constants.{account_magic}
-use intent.{dataify}
+use data.{dataify}
 use types.{AccountState, Direct}
 
 const null_hash =
@@ -21,7 +21,7 @@ test cold_spend_success() {
     AccountState {
       magic: account_magic,
       allowlist: [],
-      nonce: 0,
+      nonce: [0, 0, 0, 0, 0],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: cold_owner,
       store: null_hash,
@@ -48,7 +48,7 @@ test cold_spend_success() {
         extra_signatories: [cold_owner],
       },
       Direct,
-      Spending(account_in_ref, Some(intent.dataify(account_state_0))),
+      Spending(account_in_ref, Some(dataify(account_state_0))),
     )
 
   account.account.else(account_sc)

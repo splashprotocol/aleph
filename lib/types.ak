@@ -14,7 +14,7 @@ pub type AccountState {
   /// Set of allowed delegatees
   allowlist: Data<List<ScriptHash>>,
   /// Monotonically increasing counter used to protect account from replay attacks 
-  nonce: Data<Int>,
+  nonce: Data<List<Int>>,
   /// Credentials used to authorize intents. main cred and an optional co-cred
   hot_cred: (Data<VerificationKey>, Data<VerificationKey>),
   /// Credential for direct spening
@@ -31,7 +31,7 @@ pub type AccountAction {
 }
 
 pub type Intention {
-  target_nonce: Nonce,
+  target_nonce: (Int, Nonce),
   leaving_asset: (PolicyId, AssetName),
   leaving_amount: Int,
   arriving_asset: (PolicyId, AssetName),
