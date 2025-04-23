@@ -20,7 +20,7 @@
       "hash": "df4b5d2d8ba26d2b6bd2a442f868b57109e149d7f7594ba650b4057f"
     },
     {
-      "title": "intent.batch_intention.else",
+      "title": "intent.batch_witness.else",
       "redeemer": {
         "schema": {}
       },

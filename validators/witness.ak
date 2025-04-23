@@ -17,7 +17,7 @@ pub type BatchRedeemer {
   intentions: Data<List<AuthorizedIntention>>,
 }
 
-validator batch_intention {
+validator batch_witness {
   else(sc: ScriptContext) {
     let ScriptContext { transaction, info, redeemer } = sc
     when info is {

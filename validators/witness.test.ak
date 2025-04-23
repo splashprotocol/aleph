@@ -8,7 +8,7 @@ use cardano/transaction.{
 }
 use constants.{account_magic}
 use data.{dataify}
-use intent.{BatchRedeemer}
+use witness.{BatchRedeemer}
 use types.{AccountState, AuthorizedIntention, Delegate, Intention, Sig}
 
 const null_hash =
@@ -16,19 +16,25 @@ const null_hash =
 
 const swap_intent_proxy_hash = "intent"
 
+const correct_sig = #"6c07080dd51ddca5f5ac4a28ce412b34ffa44dc57b27141b184efd698e452a504d987c3850c43a4b3aecc8166be4cc5758ed3649679e403f4a8d1720ee0293c4"
+
 test exec_intent_atomic_success() {
-  exec_intent_atomic(10, 500, 500)
+  exec_intent_atomic(10, 500, 500, correct_sig)
 }
 
 test exec_intent_atomic_bad_rate() {
-  !exec_intent_atomic(10, 500, 499)
+  !exec_intent_atomic(10, 500, 499, correct_sig)
 }
 
 test exec_intent_atomic_bad_fee() {
-  !exec_intent_atomic(11, 500, 500)
+  !exec_intent_atomic(11, 500, 500, correct_sig)
 }
 
-fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int) {
+test exec_intent_atomic_bad_auth() {
+  !exec_intent_atomic(11, 500, 500, #"0ac6")
+}
+
+fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int, signature: ByteArray) {
   let operator = "operator"
   let owner =
     #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
@@ -110,7 +116,7 @@ fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int)
       auth: Sig {
         prefix: "",
         postfix: "",
-        signature: #"6c07080dd51ddca5f5ac4a28ce412b34ffa44dc57b27141b184efd698e452a504d987c3850c43a4b3aecc8166be4cc5758ed3649679e403f4a8d1720ee0293c4",
+        signature,
         update_proof: [],
       },
     }
@@ -125,7 +131,7 @@ fn exec_intent_atomic(consumed_fee: Int, consumed_input: Int, added_output: Int)
 
   and {
     account.account.else(account_sc),
-    intent.batch_intention.else(intent_sc),
+    witness.batch_witness.else(intent_sc),
   }
 }
 
@@ -224,7 +230,7 @@ test exec_intent_atomic_co_sign_success() {
 
   and {
     account.account.else(account_sc),
-    intent.batch_intention.else(intent_sc),
+    witness.batch_witness.else(intent_sc),
   }
 }
 
@@ -322,7 +328,7 @@ test exec_intent_continous_success() {
 
   and {
     account.account.else(account_sc),
-    intent.batch_intention.else(intent_sc),
+    witness.batch_witness.else(intent_sc),
   }
 }
 
@@ -432,12 +438,11 @@ test bench_exec_intent_atomic() {
         )
       },
     ),
-    intent.batch_intention.else(intent_sc),
+    witness.batch_witness.else(intent_sc),
   }
 }
 
-test bench_exec_intent_continous() {
-  let batch_size = 20
+fn batch_exec_intent_continous(batch_size: Int, updated_store_digest: ByteArray) {
   let operator = "operator"
   let owner =
     #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
@@ -480,7 +485,7 @@ test bench_exec_intent_continous() {
       nonce: [0, 0, 0, 0, 2],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
-      store: #"ca1dceb60bc4e65660265e2929fd0e8801bd994fd35dd01442bfe157da76057a",
+      store: updated_store_digest,
     }
   let output =
     Output(
@@ -549,6 +554,14 @@ test bench_exec_intent_continous() {
         )
       },
     ),
-    intent.batch_intention.else(intent_sc),
+    witness.batch_witness.else(intent_sc),
   }
+}
+
+test batch_exec_intent_continous_sucess() {
+  batch_exec_intent_continous(20, #"ca1dceb60bc4e65660265e2929fd0e8801bd994fd35dd01442bfe157da76057a")
+}
+
+test exec_intent_continous_bad_state() {
+  !batch_exec_intent_continous(3, #"ca1dceb60bc4e65660265e2929fd0e8801bd994fd35dd01442bfe157da76058c")
 }
