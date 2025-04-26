@@ -1,5 +1,6 @@
-use account
+use account.{AccountState, Delegate}
 use aiken/collection/list
+use aiken/fuzz
 use cardano/address.{Address, Script}
 use cardano/assets.{ada_asset_name, ada_policy_id, add, from_lovelace}
 use cardano/script_context.{ScriptContext, Spending, Withdrawing}
@@ -8,9 +9,8 @@ use cardano/transaction.{
 }
 use constants.{account_magic}
 use data.{dataify}
-use witness.{BatchRedeemer}
-use types.{AccountState, AuthorizedIntention, Delegate, Intention, Sig}
-use aiken/fuzz
+use types.{Sig}
+use witness.{AuthorizedIntention, BatchRedeemer, Intention}
 
 const swap_intent_proxy_hash = "proxy"
 
@@ -123,7 +123,7 @@ fn exec_intent_continous(batch_size: Int) {
         acc && account.account.else(
           ScriptContext(
             tx,
-            Delegate(swap_intent_proxy_hash),
+            Delegate(0),
             Spending(i.output_reference, Some(dataify(account_state_0))),
           ),
         )
@@ -140,4 +140,3 @@ fn sample_int(size: Int) -> Fuzzer<Int> {
 bench exec_intent_continous_30(n via sample_int) {
   exec_intent_continous(n)
 }
-

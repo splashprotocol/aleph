@@ -1,4 +1,4 @@
-use account
+use account.{AccountState, Delegate, Direct}
 use aiken/crypto.{ScriptHash}
 use cardano/address.{Address, Script}
 use cardano/assets.{add, from_lovelace}
@@ -8,8 +8,6 @@ use cardano/transaction.{
 }
 use constants.{account_magic}
 use data.{dataify}
-
-use types.{AccountState, Direct, Delegate}
 
 const null_hash =
   #"0000000000000000000000000000000000000000000000000000000000000000"
@@ -43,11 +41,7 @@ fn cold_spend(cold_owner: ByteArray, signer: ByteArray) {
 
   let account_sc =
     ScriptContext(
-      Transaction {
-        ..placeholder,
-        inputs: inputs,
-        extra_signatories: [signer],
-      },
+      Transaction { ..placeholder, inputs: inputs, extra_signatories: [signer] },
       Direct,
       Spending(account_in_ref, Some(dataify(account_state_0))),
     )
@@ -63,14 +57,18 @@ test cold_spend_bad_auth() {
   !cold_spend("owner", "adversary")
 }
 
-fn delegate(allowlist: List<ScriptHash>, delegated_to: ScriptHash, real_witness: ScriptHash) {
+fn delegate(
+  allowlist: List<ScriptHash>,
+  delegated_to: Int,
+  real_witness: ScriptHash,
+) {
   let owner =
     #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
   let account_address = Address(Script("account_address"), None)
   let account_state_0 =
     AccountState {
       magic: account_magic,
-      allowlist: allowlist,
+      allowlist,
       nonce: [0, 0, 0, 0, 0],
       hot_cred: (dataify(owner), dataify([])),
       cold_cred: "cold_owner",
@@ -105,13 +103,13 @@ fn delegate(allowlist: List<ScriptHash>, delegated_to: ScriptHash, real_witness:
 }
 
 test delegate_success() {
-  delegate(["wit"], "wit", "wit")
+  delegate(["wit"], 0, "wit")
 }
 
-test delegate_witness_not_allowed() {
-  !delegate(["wit"], "another_wit", "another_wit")
+test delegate_witness_out_of_range() fail {
+  delegate(["wit"], 1, "another_wit")
 }
 
 test delegate_witness_mismatch() fail {
-  delegate(["wit"], "wit", "bad_wit")
+  delegate(["wit"], 0, "bad_wit")
 }

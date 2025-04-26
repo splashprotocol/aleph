@@ -1,9 +1,33 @@
 use aiken/builtin
 use aiken/collection/list
+use aiken/crypto.{ScriptHash, VerificationKey, VerificationKeyHash}
 use cardano/address.{Credential, Script}
 use cardano/script_context.{ScriptContext, Spending}
 use cardano/transaction.{Transaction}
-use types.{AccountAction, AccountState, Delegate, Direct}
+use list_ext
+use types.{Magic}
+
+pub type AccountState {
+  /// Used to recognise accounts
+  magic: Data<Magic>,
+  /// Set of allowed delegatees
+  allowlist: Data<List<ScriptHash>>,
+  /// Monotonically increasing counter used to protect account from replay attacks 
+  nonce: Data<List<Int>>,
+  /// Credentials used to authorize intents. main cred and an optional co-cred
+  hot_cred: (Data<VerificationKey>, Data<VerificationKey>),
+  /// Credential for direct spening
+  cold_cred: Data<VerificationKeyHash>,
+  /// Local store of the account used by dapps to save intermediate state
+  store: Data<ByteArray>,
+}
+
+pub type AccountAction {
+  /// Delegate control to third-party intent witness
+  Delegate(Int)
+  /// Direct operation carried by owner 
+  Direct
+}
 
 validator account {
   else(sc: ScriptContext) {
@@ -19,13 +43,10 @@ validator account {
                 |> builtin.tail_list
                 |> builtin.head_list
                 |> builtin.un_list_data
-            and {
-              list.has(allowlist, delegate),
-              check_for_witness(
-                tx.withdrawals,
-                Script(builtin.un_b_data(delegate)),
-              ),
-            }
+            check_for_witness(
+              tx.withdrawals,
+              Script(list_ext.at(allowlist, delegate) |> builtin.un_b_data),
+            )
           }
           Direct -> {
             expect state: AccountState = datum

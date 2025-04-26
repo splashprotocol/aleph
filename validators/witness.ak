@@ -1,17 +1,34 @@
+use account.{AccountState}
 use aiken/builtin
 use aiken/cbor
 use aiken/crypto.{VerificationKeyHash, blake2b_256, verify_ecdsa_signature}
 use aiken/merkle_patricia_forestry as mpf
 use aiken/primitive/bytearray.{concat}
-use cardano/assets.{ada_policy_id}
+use cardano/assets.{AssetName, PolicyId, ada_policy_id}
 use cardano/certificate.{RegisterCredential}
 use cardano/script_context.{Publishing, ScriptContext, Withdrawing}
 use cardano/transaction.{InlineDatum, Input, Output}
 use constants
 use data.{dataify}
 use nonce.{check_nonce}
-use types.{AccountState, AuthorizedIntention, Intention, Path, Sig}
+use types.{Auth, Nonce, Path, Sig}
 use value_ext as ext
+
+pub type Intention {
+  target_nonce: (Int, Nonce),
+  leaving_asset: (PolicyId, AssetName),
+  leaving_amount: Int,
+  arriving_asset: (PolicyId, AssetName),
+  expected_arriving_amount: Int,
+  fee_lovelace: Int,
+  operator: VerificationKeyHash,
+}
+
+pub type AuthorizedIntention {
+  intent: Intention,
+  remainder: Int,
+  auth: Auth,
+}
 
 pub type BatchRedeemer {
   intentions: Data<List<AuthorizedIntention>>,
