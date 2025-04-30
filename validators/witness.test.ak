@@ -19,33 +19,11 @@ const swap_intent_proxy_hash = "intent"
 const correct_sig =
   #"6c07080dd51ddca5f5ac4a28ce412b34ffa44dc57b27141b184efd698e452a504d987c3850c43a4b3aecc8166be4cc5758ed3649679e403f4a8d1720ee0293c4"
 
-test exec_intent_atomic_success() {
-  exec_intent_atomic(10, 500, 500, correct_sig)
-}
+const owner =
+  #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
 
-test exec_intent_atomic_bad_rate() {
-  !exec_intent_atomic(10, 500, 499, correct_sig)
-}
-
-test exec_intent_atomic_bad_fee() {
-  !exec_intent_atomic(11, 500, 500, correct_sig)
-}
-
-test exec_intent_atomic_bad_auth() {
-  !exec_intent_atomic(11, 500, 500, #"0ac6")
-}
-
-fn exec_intent_atomic(
-  consumed_fee: Int,
-  consumed_input: Int,
-  added_output: Int,
-  signature: ByteArray,
-) {
-  let operator = "operator"
-  let owner =
-    #"02b98a7fb8cc007048625b6446ad49a1b3a722df8c1ca975b87160023e14d19097"
-  let account_address = Address(Script("account_address"), None)
-  let account_state_0 =
+test exec_intent_atomic_exact_rate() {
+  let s0 =
     AccountState {
       magic: account_magic,
       allowlist: [swap_intent_proxy_hash],
@@ -54,6 +32,205 @@ fn exec_intent_atomic(
       cold_cred: "cold_owner",
       store: null_hash,
     }
+  let s1 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  exec_intent_atomic(500, 500, 10, 500, 500, correct_sig, (s0, s1))
+}
+
+test exec_intent_atomic_better_rate() {
+  let s0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 0],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let s1 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  exec_intent_atomic(500, 500, 10, 500, 501, correct_sig, (s0, s1))
+}
+
+test exec_intent_atomic_bad_rate() {
+  let s0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 0],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let s1 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  !exec_intent_atomic(500, 500, 10, 500, 499, correct_sig, (s0, s1))
+}
+
+test exec_intent_atomic_bad_fee() {
+  let s0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 0],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let s1 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  !exec_intent_atomic(500, 500, 11, 500, 500, correct_sig, (s0, s1))
+}
+
+test exec_intent_atomic_bad_auth() {
+  let s0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 0],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let s1 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  !exec_intent_atomic(500, 500, 11, 500, 500, #"0ac6", (s0, s1))
+}
+
+test exec_intent_atomic_magic_forged() {
+  let s0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 0],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let s1 =
+    AccountState {
+      magic: "junk",
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  !exec_intent_atomic(500, 500, 11, 500, 500, correct_sig, (s0, s1))
+}
+
+test exec_intent_atomic_creds_froged() {
+  let s0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 0],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let s1 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify("adversary"), dataify([])),
+      cold_cred: "adversary",
+      store: null_hash,
+    }
+  !exec_intent_atomic(500, 500, 11, 500, 500, correct_sig, (s0, s1))
+}
+
+test exec_intent_atomic_store_froged() {
+  let s0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 0],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let s1 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: "junk",
+    }
+  !exec_intent_atomic(500, 500, 11, 500, 500, correct_sig, (s0, s1))
+}
+
+test exec_intent_atomic_allowlist_forged() {
+  let s0 =
+    AccountState {
+      magic: account_magic,
+      allowlist: [swap_intent_proxy_hash],
+      nonce: [0, 0, 0, 0, 0],
+      hot_cred: (dataify(owner), dataify([])),
+      cold_cred: "cold_owner",
+      store: null_hash,
+    }
+  let s1 =
+    AccountState {
+      magic: "junk",
+      allowlist: [swap_intent_proxy_hash, "adversarial_script"],
+      nonce: [0, 0, 0, 0, 2],
+      hot_cred: (dataify("adversary"), dataify([])),
+      cold_cred: "adversary",
+      store: null_hash,
+    }
+  !exec_intent_atomic(500, 500, 11, 500, 500, correct_sig, (s0, s1))
+}
+
+fn exec_intent_atomic(
+  leaving_amount: Int,
+  expected_arriving_amount: Int,
+  consumed_fee: Int,
+  consumed_input: Int,
+  added_output: Int,
+  signature: ByteArray,
+  account_state: (AccountState, AccountState),
+) {
+  let operator = "operator"
+  let account_address = Address(Script("account_address"), None)
   let account_in_ref = OutputReference("tx0", 0)
   let lovelace_initial = 1000
   let inputs =
@@ -63,28 +240,19 @@ fn exec_intent_atomic(
         Output(
           account_address,
           from_lovelace(lovelace_initial) |> add("foo", "bar", 1),
-          InlineDatum(account_state_0),
+          InlineDatum(account_state.1st),
           None,
         ),
       ),
     ]
-  let account_state_1 =
-    AccountState {
-      magic: account_magic,
-      allowlist: [swap_intent_proxy_hash],
-      nonce: [0, 0, 0, 0, 2],
-      hot_cred: (dataify(owner), dataify([])),
-      cold_cred: "cold_owner",
-      store: null_hash,
-    }
   let outputs =
     [
       Output(
         account_address,
         from_lovelace(lovelace_initial - consumed_fee - consumed_input)
           |> add("foo", "bar", 1)
-          |> add("tok", "tn", 0 + added_output),
-        InlineDatum(account_state_1),
+          |> add("tok", "tn", added_output),
+        InlineDatum(account_state.2nd),
         None,
       ),
     ]
@@ -102,16 +270,16 @@ fn exec_intent_atomic(
     ScriptContext(
       tx,
       Delegate(0),
-      Spending(account_in_ref, Some(dataify(account_state_0))),
+      Spending(account_in_ref, Some(dataify(account_state.1st))),
     )
 
   let intent_1 =
     Intention {
       target_nonce: (4, 2),
       leaving_asset: (ada_policy_id, ada_asset_name),
-      leaving_amount: 500,
+      leaving_amount,
       arriving_asset: ("tok", "tn"),
-      expected_arriving_amount: 500,
+      expected_arriving_amount,
       fee_lovelace: 10,
       operator,
     }

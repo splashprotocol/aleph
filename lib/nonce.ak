@@ -29,7 +29,15 @@ pub fn check_nonce(
               curr_nonce == next_nonce,
             }
           } else {
-            check_nonce(curr_nonce, next_nonce, target_index - 1, target_nonce)
+            and {
+              c == n,
+              check_nonce(
+                curr_nonce,
+                next_nonce,
+                target_index - 1,
+                target_nonce,
+              ),
+            }
           }
       }
   }
@@ -49,6 +57,33 @@ test check_nonce_last_ok() {
     [dataify(0), dataify(0), dataify(0), dataify(0), dataify(0)],
     [dataify(0), dataify(0), dataify(0), dataify(0), dataify(3)],
     4,
+    3,
+  )
+}
+
+test check_nonce_forged_init() {
+  !check_nonce(
+    [dataify(0), dataify(0), dataify(0), dataify(0), dataify(0)],
+    [dataify(1), dataify(0), dataify(0), dataify(0), dataify(3)],
+    4,
+    3,
+  )
+}
+
+test check_nonce_extended() {
+  !check_nonce(
+    [dataify(0), dataify(0), dataify(0), dataify(0), dataify(0)],
+    [dataify(0), dataify(0), dataify(0), dataify(0), dataify(3), dataify(0)],
+    4,
+    3,
+  )
+}
+
+test check_nonce_shrinked() {
+  !check_nonce(
+    [dataify(0), dataify(0), dataify(0), dataify(0), dataify(0)],
+    [dataify(0), dataify(0), dataify(0), dataify(3)],
+    3,
     3,
   )
 }
